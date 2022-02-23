@@ -104,5 +104,8 @@ dist
 .tern-port
 
 # macOS
-
 .DS_Store
+
+# Playwright
+test-results/
+playwright-report/

@@ -1,0 +1,21 @@
+{
+  "name": "workshop-cbt-playwright",
+  "version": "1.0.0",
+  "description": "Modern Cross Browser Testing in JavaScript using Playwright",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/applitools/workshop-cbt-playwright-js.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/applitools/workshop-cbt-playwright-js/issues"
+  },
+  "homepage": "https://github.com/applitools/workshop-cbt-playwright-js#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.19.1"
+  }
+}
