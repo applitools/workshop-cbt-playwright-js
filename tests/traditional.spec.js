@@ -1,12 +1,12 @@
 const { test, expect } = require('@playwright/test');
 
 
-test.beforeEach(async ({ page }) => {
-    await page.setViewportSize({width: 1600, height: 1200});
-});
-
-
 test.describe('A traditional test', () => {
+
+    test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({width: 1600, height: 1200});
+    });
+
     test('should log into the demo app', async ({ page }) => {
         
         // Load login page
