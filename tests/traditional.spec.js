@@ -10,12 +10,9 @@ test.describe('A traditional test', () => {
     test('should log into the demo app', async ({ page }) => {
         
         // Load login page
-
-        // let site = Cypress.env('DEMO_SITE') ?? 'original'
-        // let extra = (site == 'original') ? '' : '/index_v2.html'
-        // cy.visit('https://demo.applitools.com' + extra)
-
-        await page.goto('https://demo.applitools.com');
+        let site = process.env.DEMO_SITE ?? 'original'
+        let extra = (site == 'original') ? '' : '/index_v2.html'
+        await page.goto('https://demo.applitools.com' + extra);
 
         // Verify login page
         await expect(page.locator('div.logo-w')).toBeVisible();

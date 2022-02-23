@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "description": "Modern Cross Browser Testing in JavaScript using Playwright",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "playwright test",
+    "traditional": "playwright test tests/traditional.spec.js",
+    "traditional:original": "DEMO_SITE=original playwright test tests/traditional.spec.js",
+    "traditional:changed": "DEMO_SITE=changed playwright test tests/traditional.spec.js",
+    "visual": "playwright test tests/visual.spec.js --project=chromium",
+    "visual:original": "DEMO_SITE=original playwright test tests/visual.spec.js --project=chromium",
+    "visual:changed": "DEMO_SITE=changed playwright test tests/visual.spec.js --project=chromium"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/applitools/workshop-cbt-playwright-js.git"
