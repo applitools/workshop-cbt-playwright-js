@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/applitools/workshop-cbt-playwright-js#readme",
   "devDependencies": {
+    "@applitools/eyes-playwright": "^1.11.2",
     "@playwright/test": "^1.19.1"
   }
 }
