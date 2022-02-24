@@ -1,6 +1,8 @@
 const { test, expect } = require('@playwright/test');
 
 
+test.describe.configure({ mode: 'parallel' })
+
 test.describe('A traditional test', () => {
 
     test.beforeEach(async ({ page }) => {
