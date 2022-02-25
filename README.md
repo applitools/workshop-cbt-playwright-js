@@ -53,8 +53,6 @@ To complete this workshop, you will need:
    * Add the [Playwright Test for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) extension
 
 
-# OLD VERBIAGE NEEDING UPDATES BELOW
-
 ## Architecture
 
 This project is a small JavaScript test automation project
@@ -69,9 +67,7 @@ Each test case covers the same login behavior, but they do so in different ways:
 
 ## Running tests
 
-To launch tests,
-run `npx cypress open` to launch the Cypress browser window (good for developing),
-or run `npx cypress run` to execute tests purely from the command line (good for CI/CD).
+To launch all tests, run `npx playwright test`.
 
 Before running the visual test, 
 you must set the `APPLITOOLS_API_KEY` OS environment variable to your Applitools API key
@@ -82,23 +78,17 @@ There are also two versions of the demo site under test:
 1. The *original* version of the site
 2. A *changed* version of the site with visual differences
 
-To control which version to test, set the `DEMO_SITE`
-[Cypress environment variable](https://docs.cypress.io/guides/guides/environment-variables)
-to `original` or `changed`.
+To control which version to test, set the `DEMO_SITE` environment variable to `original` or `changed`.
 
 This project also provides a number of npm scripts to make launch commands simpler:
 
-* `npm run cypress` - opens the Cypress browser window
-* `npm run cypress:original` - opens the Cypress browser window to test the original site
-* `npm run cypress:changed` - opens the Cypress browser window to test the changed site
-* `npm test` - executes tests from the command line
-* `npm run test:original` - executes tests against the original site
-* `npm run test:changed` - executes tests against the changed site
-* `npm run test:chrome` - executes tests using Google Chrome
-* `npm run test:edge` - executes tests using Microsoft Edge
-* `npm run test:firefox` - executes tests using Mozilla Firefox
+* `npm test` - runs all tests using all browser projects
+* `npm run traditional` - runs the traditional test using all browser projects
+* `npm run traditional:original` - runs the traditional test against the original site using all browser projects
+* `npm run traditional:changed` - runs the traditional test against the changed site using all browser projects
+* `npm run visual` - runs the visual test using Chromium locally
+* `npm run visual:original` - runs the visual test against the original site using Chromium locally
+* `npm run visual:changed` - runs the visual test against the changed site using Chromium locally
 
-These commands run both the traditional and visual tests.
-To run one test, append `-- --spec "<path>"` to the command.
-For example, `npm run test:changed -- --spec "cypress/integration/visual.spec.js"`
-runs the visual test against the changed site purely from the command line.
+You can also append any [Playwright command line options](https://playwright.dev/docs/test-cli)
+to these `npm` commands by adding them after `--`.
