@@ -67,7 +67,11 @@ Each test case covers the same login behavior, but they do so in different ways:
 
 ## Running tests
 
-To launch all tests, run `npx playwright test`.
+You'll need to run a few commands to run tests:
+
+* To install project dependencies, run `npm install`.
+* To install browser projects, run `npx playwright install`.
+* To launch all tests, run `npx playwright test`.
 
 Before running the visual test, 
 you must set the `APPLITOOLS_API_KEY` OS environment variable to your Applitools API key
