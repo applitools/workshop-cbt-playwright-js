@@ -68,6 +68,10 @@ we will build a [Playwright](https://playwright.dev/) project written in JavaScr
 is an automated implementation of this login test:
 
 ```javascript
+const { test, expect } = require('@playwright/test');
+
+test.describe.configure({ mode: 'parallel' })
+
 test.describe('A traditional test', () => {
 
     test.beforeEach(async ({ page }) => {
@@ -176,11 +180,16 @@ There's risk that unchecked things could break.
 ### 1.2. Running the test locally
 
 Let's run this test locally.
-To manually launch tests, execute
-`npx playwright test tests/traditional.spec.js --project=chromium --headed`
-(or `npm run traditional -- --project=chromium --headed`)
-from the command line.
-This repository has npm scripts for testing declared in `package.json`.
+To manually launch tests, execute:
+
+```bash
+$ npx playwright test tests/traditional.spec.js --project=chromium --headed
+```
+
+> This repository also has npm scripts for testing declared in `package.json`.
+> 
+> You could alternatively run `npm run traditional -- --project=chromium --headed` from the command line.
+
 The `--project=chromium` option will run the test against the Chromium browser,
 and the `--headed` option will open the browser so you can see it run on your local machine.
 The test should take only a few seconds to complete, and it should pass.
@@ -337,7 +346,7 @@ Instead of building your own infrastructure,
 you can pay an external vendor to provide it for you as a cloud-based service.
 Many (but not all) major cross-browser testing vendors now support Playwright tests.
 A vendor handles all the screen combinations for you.
-Your test simply needs to declare what you want for your remote Cypress session.
+Your test simply needs to declare what you want for your remote Playwright session.
 Vendor platforms also typically have nice features like dashboards, screenshots, and videos.
 
 ![Traditional cross-browser testing is broken](images/slide-cbt-is-broken.png)
@@ -407,7 +416,7 @@ from the test machine to the Applitools cloud.
 There's no back-and-forth communication like with a traditional functional test.
 
 You can use Applitools Eyes and the Ultrafast Grid with any automation tool or framework:
-Cypress, Selenium, Appium, Playwright, WebDriverIO, Nightwatch, and more.
+Playwright, Cypress, Selenium, Appium, WebDriverIO, Nightwatch, and more.
 
 If you want specific data on how much faster and more efficient your testing can be
 with Visual AI and Applitools Ultrafast Grid,
@@ -417,85 +426,122 @@ then check out this report:
 
 ### 2.3. Rewriting login as a visual test
 
-
-
-
-- npm i -D @applitools/eyes-playwright
-
-
-
-
-
-
-
 Let's rewrite our login test into a visual test.
 The test steps can remain the same, but the setup and assertions will change.
 In this repository,
-[`cypress/integration/visual.spec.js`](cypress/integration/visual.spec.js)
+[`tests/visual.spec.js`](tests/visual.spec.js)
 contains the updated code.
 
-First, we need to install and set up the Applitools Eyes SDK for Cypress:
+First, we need to install the Applitools Eyes SDK for Playwright:
 
 ```bash
-$ npm install @applitools/eyes-cypress
-$ npx eyes-setup
+$ npm install -D @applitools/eyes-playwright
 ```
 
-The first command will install the npm package for the project.
-The second command will add Applitools Eyes SDK plugins and support to the project.
-
-The login test's steps will remain the same,
-but we need to make Applitools Eyes watch the browser.
-We do that by starting each test with `cy.eyesOpen(...)`
-and ending each test with `cy.eyesClose()`.
-When opening Eyes, we also specify the names of the app and the test:
+Then, we need to import some new things from the Applitools Eyes SDK:
 
 ```javascript
-describe('A visual test with Applitools', () => {
+const { test } = require('@playwright/test');
+const {
+    VisualGridRunner,
+    Eyes,
+    Configuration,
+    BatchInfo,
+    BrowserType,
+    DeviceName,
+    ScreenOrientation,
+    Target,
+    MatchLevel
+} = require('@applitools/eyes-playwright');
+```
 
-    it('should log into the demo app', () => {
+Next, we must configure tests to run against different browser configurations in Applitools Ultrafast Grid.
+Add the following test structure with the `test.beforeEach` call:
 
-        cy.eyesOpen({
-            appName: 'Applitools Demo App',
-            testName: 'Login',
-        })
+```javascript
+test.describe.configure({ mode: 'parallel' })
 
-        loadLoginPage()
-        verifyLoginPage()
-        performLogin()
-        verifyMainPage()
-    })
+test.describe('A visual test', () => {
+    let eyes, runner;
 
-    afterEach(() => {
-        cy.eyesClose()
-    })
+    test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({width: 1600, height: 1200});
+
+        runner = new VisualGridRunner({ testConcurrency: 5 });
+        eyes = new Eyes(runner);
+    
+        const configuration = new Configuration();
+        configuration.setBatch(new BatchInfo('Modern Cross Browser Testing in JavaScript with Playwright'));
+    
+        configuration.addBrowser(800, 600, BrowserType.CHROME);
+        configuration.addBrowser(700, 500, BrowserType.FIREFOX);
+        configuration.addBrowser(1600, 1200, BrowserType.IE_11);
+        configuration.addBrowser(1024, 768, BrowserType.EDGE_CHROMIUM);
+        configuration.addBrowser(800, 600, BrowserType.SAFARI);
+    
+        configuration.addDeviceEmulation(DeviceName.iPhone_X, ScreenOrientation.PORTRAIT);
+        configuration.addDeviceEmulation(DeviceName.Pixel_2, ScreenOrientation.PORTRAIT);
+        configuration.addDeviceEmulation(DeviceName.Galaxy_S5, ScreenOrientation.PORTRAIT);
+        configuration.addDeviceEmulation(DeviceName.Nexus_10, ScreenOrientation.PORTRAIT);
+        configuration.addDeviceEmulation(DeviceName.iPad_Pro, ScreenOrientation.LANDSCAPE);
+    
+        eyes.setConfiguration(configuration);
+    });
 })
 ```
 
-The `loadLoginPage` and `performLogin` methods do not need any changes because the interactions are the same.
-However, the "verify" methods can reduce drastically:
+The `beforeEach` call does many things:
+
+1. It sets a viewport size for local testing (which is also done in `traditional.spec.js`).
+2. It creates a `VisualGridRunner` with a test concurrency of 5.
+   * If you have a free Applitools account, your concurrency will be limited to 1.
+3. It creates a configuration with a batch named `'Modern Cross Browser Testing in JavaScript with Playwright'`.
+4. It sets the configuration to test 5 desktop browsers and 5 emulated mobile devices.
+
+The login test's steps will remain the same,
+but we need to make Applitools Eyes watch the browser.
+We do that by starting each test with `eyes.open(...)`
+and ending each test with `eyes.close()`.
+When opening Eyes, we also specify the names of the app and the test:
 
 ```javascript
-function verifyLoginPage() {
-    cy.eyesCheckWindow({
-        tag: "Login page",
-        target: 'window',
-        fully: true
-    });
-}
+    test('should log into the demo app', async ({ page }) => {
+        
+        // Open Applitools Eyes
+        await eyes.open(page, 'Applitools Demo App', 'Login');
 
-function verifyMainPage() {
-    cy.eyesCheckWindow({
-        tag: "Main page",
-        target: 'window',
-        fully: true,
-        matchLevel: 'Layout'
+        // Test steps
+        // ...
+
+        // Close Applitools Eyes
+        await eyes.close(false)
     });
-}
 ```
 
-**"A picture is worth a thousand assertions."**
-Previously, these methods had multiple complicated assertions
+The load and login steps do not need any changes because the interactions are the same.
+However, the "verify" steps reduce drastically to one-line snapshot calls:
+
+```javascript
+    test('should log into the demo app', async ({ page }) => {
+        
+        // ...
+
+        // Verify login page
+        await eyes.check('Login page', Target.window().fully());
+        
+        // ...
+        
+        // Verify main page
+        await eyes.check('Main page', Target.window().matchLevel(MatchLevel.Layout).fully());
+
+        // ...
+        
+    });
+```
+
+If a picture is worth a thousand words, then
+**a snapshot is worth a thousand assertions**.
+Previously, these steps had multiple complicated assertions
 that merely checked if some elements appeared or had certain text values.
 Now, Applitools Eyes captures a full snapshot,
 checking *everything* on the page like a pair of human eyes.
@@ -508,6 +554,17 @@ I cannot understate how much development time these visual checkpoints save me.
 I spend so much time trying to find locators and program clever assertions,
 but they are so fragile,
 and there are only so many assertions I can include.
+
+Finally, after each test, we need to do some safety handling and result dumping:
+
+```javascript
+    test.afterEach(async () => {
+        await eyes.abort();
+
+        const results = await runner.getAllTestResults(false);
+        console.log('Visual test results', results);
+    });
+```
 
 These are the only changes we need to make to the test case
 to convert it from a traditional functional test to a visual one.
@@ -531,56 +588,23 @@ On Windows:
 > set APPLITOOLS_API_KEY=<value>
 ```
 
-Now, we could run our new login test locally on Chrome, Edge, and Firefox,
-but if we want to run it in the Applitools Ultrafast Grid,
-we need to add one more thing to our project.
-Create a file named `applitools.config.js` at the project's root level
-with the following contents:
-
-```javascript
-module.exports = {
-    testConcurrency: 5,
-    apiKey: 'APPLITOOLS_API_KEY',
-    browser: [
-        // Desktop
-        {width: 800, height: 600, name: 'chrome'},
-        {width: 700, height: 500, name: 'firefox'},
-        {width: 1600, height: 1200, name: 'ie11'},
-        {width: 1024, height: 768, name: 'edgechromium'},
-        {width: 800, height: 600, name: 'safari'},
-        // Mobile
-        {deviceName: 'iPhone X', screenOrientation: 'portrait'},
-        {deviceName: 'Pixel 2', screenOrientation: 'portrait'},
-        {deviceName: 'Galaxy S5', screenOrientation: 'portrait'},
-        {deviceName: 'Nexus 10', screenOrientation: 'portrait'},
-        {deviceName: 'iPad Pro', screenOrientation: 'landscape'},
-    ],
-    batchName: 'Modern Cross-Browser Testing Workshop'
-}
-```
-
-`applitools.config.js` configures how to visually test snapshots.
-This configuration will test 5 desktop browsers of varying viewport sizes
-and 5 mobile devices of varying orientations.
-You can test all the major browsers up to two previous versions,
-and you can test over 60 emulated mobile devices.
-The configuration is concise and declarative.
-Notice how even though Cypress cannot test Safari, IE, or mobile browser locally,
-the Ultrafast Grid *can* test snapshots from Cypress tests using those browsers!
-
-`testConcurrency` controls the degree of parallel execution in the Ultrafast Grid.
-(If you have a free account, you may be limited to 1.)
-
 Let's run the visual version of the login test with the original site to set baselines:
 
 ```bash
-$ npx cypress run --env DEMO_SITE=original --spec "cypress/integration/visual.spec.js"
+$ npm run visual:original
 ```
 
-Make sure to set the `APPLITOOLS_API_KEY` environment variable to your API key.
+> This command is equivalent to running
+> `npx DEMO_SITE=original playwright test tests/visual.spec.js --project=chromium`.
+
 When launched locally, you should see the test run headlessly.
 Then, the automation uploads the snapshots to Applitools Ultrafast Grid to run against the ten other targets.
 All tests should take about half a minute to complete.
+
+> *Warning:*
+> You might need to increase Playwright's standard timeout in `playwright.config.js`.
+> By default, this timeout is 30 seconds.
+> In this repository, it is set to 60 seconds.
 
 Results in the Applitools Eyes dashboard should look like this:
 
@@ -593,9 +617,7 @@ Also, notice how little time it took to run this batch of tests.
 Running our test across 10 different browser configurations
 with 2 visual checkpoints each at a concurrency level of 5 took only 36 seconds to complete.
 That’s ultra fast!
-Running that many test iterations locally or in a
-[traditional Cypress parallel environment](https://docs.cypress.io/guides/guides/parallelization#Overview)
-could take several minutes.
+Running that many test iterations locally or using other infrastructure could take several minutes.
 
 Run the tests again.
 The second run should succeed just like the first.
@@ -610,8 +632,11 @@ To show the power of Visual AI in testing,
 let's run the tests one more time with visual changes to the demo site:
 
 ```bash
-$ npx cypress run --env DEMO_SITE=changed --spec "cypress/integration/visual.spec.js"
+$ npm run visual:changed
 ```
+
+> This command is equivalent to running
+> `npx DEMO_SITE=changed playwright test tests/visual.spec.js --project=chromium`.
 
 This time, changes are detected on the login page!
 Differences between the baseline and the current snapshot are highlighted in magenta.
@@ -629,6 +654,10 @@ As you can see, the big advantages of this type of cross-browser testing are:
 1. *Speed:* tests take second instead of minutes
 2. *Simplicity:* visual checkpoints replace complicated assertions
 3. *Sharpness:* Visual AI accurately highlights meaningful changes to a human eye
+
+Another unique advantage of using Applitools Visual AI together with Playwright
+is that tests can cover *any* browser configuration, even ones not supported locally by Playwright.
+That means you can run Playwright tests against full Firefox, Safari, and Internet Explorer browsers.
 
 
 ### 2.5. Integrating modern cross-browser testing with CI/CD
@@ -648,9 +677,9 @@ CI/CD systems can trigger tests automatically:
 
 This repository is configured with GitHub Actions to run the visual login test:
 
-* [Run Visual Test (Original)](https://github.com/applitools/workshop-cbt-cypress/actions/workflows/run-visual-test-original.yml)
+* [Run Visual Test (Original)](https://github.com/applitools/workshop-cbt-playwright-js/actions/workflows/run-visual-test-original.yml)
   runs the test with the original pages.
-* [Run Visual Test (Changed)](https://github.com/applitools/workshop-cbt-cypress/actions/workflows/run-visual-test-changed.yml)
+* [Run Visual Test (Changed)](https://github.com/applitools/workshop-cbt-playwright-js/actions/workflows/run-visual-test-changed.yml)
   runs the test with the changed pages to reveal visual failures.
 
 Ideally, teams want to get as many results as they can as quickly as possible.
