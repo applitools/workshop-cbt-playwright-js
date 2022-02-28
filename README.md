@@ -3,7 +3,7 @@
 # Modern Cross Browser Testing in JavaScript using Playwright
 
 This repository contains the example code for the
-[Modern Cross Browser Testing in JavaScript using Playwright](applitools.info/w4f) workshop
+[Modern Cross Browser Testing in JavaScript using Playwright](https://applitools.info/w4f) workshop
 led by [Pandy Knight](https://twitter.com/AutomationPanda)
 and hosted by [Applitools](https://applitools.com/).
 
